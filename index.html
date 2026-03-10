@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEXUS LAUNCHER</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0a0e1a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="NEXUS" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Exo+2:ital,wght@0,100..900;1,100..900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ANIMATED BACKGROUND -->
+  <div class="bg-scene" aria-hidden="true">
+    <canvas id="bg-canvas"></canvas>
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+    <div class="bg-grid"></div>
+    <div class="bg-vignette"></div>
+  </div>
+
+  <!-- TOPBAR -->
+  <header class="topbar" id="topbar">
+    <div class="topbar-inner">
+      <div class="logo">
+        <div class="logo-hex-wrap">
+          <svg class="logo-hex" viewBox="0 0 48 48" fill="none">
+            <polygon points="24,2 44,13 44,35 24,46 4,35 4,13" stroke="url(#hg)" stroke-width="1.5" fill="rgba(0,210,255,0.06)"/>
+            <polygon points="24,9 38,17 38,31 24,39 10,31 10,17" stroke="rgba(0,210,255,0.25)" stroke-width="1" fill="none"/>
+            <circle cx="24" cy="24" r="5.5" fill="url(#hg)"/>
+            <defs>
+              <linearGradient id="hg" x1="0" y1="0" x2="48" y2="48">
+                <stop offset="0%" stop-color="#00d2ff"/>
+                <stop offset="100%" stop-color="#7b2ff7"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="logo-pulse"></div>
+        </div>
+        <div class="logo-words">
+          <span class="logo-main">NEXUS</span>
+          <span class="logo-sub">LAUNCHER &nbsp;<em>v2.0</em></span>
+        </div>
+      </div>
+
+      <nav class="topbar-nav">
+        <button class="nav-pill active" data-view="library">
+          <svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+          LIBRARY
+        </button>
+        <button class="nav-pill" data-view="recent">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><polyline points="8,4 8,8 11,10"/></svg>
+          RECENT
+        </button>
+      </nav>
+
+      <div class="topbar-right">
+        <div class="stat-chip">
+          <span class="stat-dot"></span>
+          <span id="app-count">0 APPS</span>
+        </div>
+        <input type="file" id="file-input" accept=".html,.htm,.zip" multiple hidden />
+        <button class="btn-add" id="upload-btn">
+          <span class="btn-add-glow"></span>
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+            <line x1="9" y1="3" x2="9" y2="15"/><line x1="3" y1="9" x2="15" y2="9"/>
+          </svg>
+          <span>ADD APP</span>
+        </button>
+      </div>
+    </div>
+    <div class="topbar-border-glow"></div>
+  </header>
+
+  <!-- SEARCH / FILTER BAND -->
+  <section class="search-band">
+    <div class="search-band-inner">
+      <div class="search-wrap">
+        <svg class="search-ico" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8.5" cy="8.5" r="5.5"/><line x1="13" y1="13" x2="18" y2="18"/></svg>
+        <input type="text" id="search-input" placeholder="Search your library..." autocomplete="off" spellcheck="false"/>
+        <button class="search-clear" id="search-clear" hidden>
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><line x1="2" y1="2" x2="12" y2="12"/><line x1="12" y1="2" x2="2" y2="12"/></svg>
+        </button>
+      </div>
+      <div class="filter-row">
+        <button class="filter-pill active" data-filter="all">ALL</button>
+        <button class="filter-pill" data-filter="html">
+          <span class="filter-dot html"></span>HTML
+        </button>
+        <button class="filter-pill" data-filter="zip">
+          <span class="filter-dot zip"></span>ZIP
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- DROP OVERLAY -->
+  <div id="drop-overlay" class="drop-overlay" hidden>
+    <div class="drop-rings">
+      <div class="drop-ring r1"></div>
+      <div class="drop-ring r2"></div>
+      <div class="drop-ring r3"></div>
+    </div>
+    <div class="drop-body">
+      <svg class="drop-arrow" viewBox="0 0 56 56" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="28" y1="8" x2="28" y2="42"/>
+        <polyline points="16,30 28,42 40,30"/>
+        <line x1="14" y1="50" x2="42" y2="50"/>
+      </svg>
+      <p class="drop-title">RELEASE TO UPLOAD</p>
+      <p class="drop-hint">Supports <strong>.html</strong> and <strong>.zip</strong></p>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <main class="main" id="main-content">
+
+    <!-- EMPTY STATE -->
+    <div class="empty-state" id="empty-state">
+      <div class="empty-visual">
+        <div class="empty-blob"></div>
+        <div class="empty-ring er1"></div>
+        <div class="empty-ring er2"></div>
+        <div class="empty-ring er3"></div>
+        <svg class="empty-hex-svg" viewBox="0 0 100 100" fill="none">
+          <polygon points="50,5 88,27 88,73 50,95 12,73 12,27" stroke="rgba(0,210,255,0.35)" stroke-width="1.5" fill="rgba(0,210,255,0.03)"/>
+          <polygon points="50,17 77,32 77,68 50,83 23,68 23,32" stroke="rgba(0,210,255,0.2)" stroke-width="1" fill="none"/>
+          <polygon points="50,32 64,40 64,60 50,68 36,60 36,40" fill="rgba(0,210,255,0.12)" stroke="rgba(0,210,255,0.5)" stroke-width="1"/>
+          <circle cx="50" cy="50" r="8" fill="rgba(0,210,255,0.25)" stroke="rgba(0,210,255,0.8)" stroke-width="1"/>
+        </svg>
+      </div>
+      <h2 class="empty-title">LIBRARY IS EMPTY</h2>
+      <p class="empty-desc">Upload HTML files or ZIP projects to build your personal app collection. Everything is stored securely in your browser.</p>
+      <button class="btn-add btn-add-hero" id="upload-btn-empty">
+        <span class="btn-add-glow"></span>
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <line x1="9" y1="3" x2="9" y2="15"/><line x1="3" y1="9" x2="15" y2="9"/>
+        </svg>
+        <span>ADD FIRST APP</span>
+      </button>
+      <p class="empty-drag-hint">— or drag &amp; drop a file anywhere on this page —</p>
+    </div>
+
+    <!-- GRID HEADER -->
+    <div class="grid-header" id="grid-header" hidden>
+      <div class="gh-left">
+        <span class="gh-title">INSTALLED</span>
+        <span class="gh-badge" id="grid-count-badge">0</span>
+      </div>
+      <div class="gh-right">
+        <button class="view-btn active" id="view-grid" title="Grid">
+          <svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+        </button>
+        <button class="view-btn" id="view-list" title="List">
+          <svg viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="2" width="14" height="3" rx="1"/><rect x="1" y="7" width="14" height="3" rx="1"/><rect x="1" y="12" width="14" height="3" rx="1"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- APP GRID -->
+    <div class="app-grid" id="app-grid" hidden></div>
+
+    <!-- NO RESULTS -->
+    <div class="no-results" id="no-results" hidden>
+      <span>⊘</span><p>No apps match your search</p>
+    </div>
+
+  </main>
+
+  <!-- STATUS BAR -->
+  <footer class="statusbar">
+    <div class="sb-left">
+      <span class="sb-led" id="status-led"></span>
+      <span id="status-msg">READY</span>
+    </div>
+    <div class="sb-right">
+      <span class="sb-badge">INDEXEDDB</span>
+      <span class="sb-badge">PWA</span>
+      <span class="sb-dim" id="storage-info">STORAGE ACTIVE</span>
+    </div>
+  </footer>
+
+  <!-- LAUNCH OVERLAY -->
+  <div id="launch-overlay" class="launch-overlay" hidden>
+    <div class="exit-bar" id="exit-bar">
+      <div class="exit-left">
+        <div class="exit-dot"></div>
+        <span class="exit-name" id="exit-app-name"></span>
+      </div>
+      <button class="exit-btn" id="exit-btn">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <line x1="4" y1="4" x2="14" y2="14"/><line x1="14" y1="4" x2="4" y2="14"/>
+        </svg>
+        EXIT
+      </button>
+    </div>
+    <iframe id="app-frame" class="app-frame"
+      sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-pointer-lock allow-downloads"
+      allowfullscreen title="Running App"></iframe>
+  </div>
+
+  <!-- TOAST -->
+  <div id="toast" class="toast" aria-live="polite">
+    <span id="toast-icon" class="toast-icon"></span>
+    <span id="toast-msg"></span>
+  </div>
+
+  <!-- CONFIRM MODAL -->
+  <div id="confirm-modal" class="modal-back" hidden>
+    <div class="modal-box">
+      <div class="modal-warn-icon">
+        <svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="20" stroke="rgba(255,60,100,0.4)" stroke-width="1.5"/><line x1="24" y1="14" x2="24" y2="26" stroke="#ff3c64" stroke-width="2.5" stroke-linecap="round"/><circle cx="24" cy="33" r="2" fill="#ff3c64"/></svg>
+      </div>
+      <h3 class="modal-title">DELETE APP?</h3>
+      <p class="modal-desc" id="confirm-msg">This will permanently remove the app from your library.</p>
+      <div class="modal-btns">
+        <button class="mbtn mbtn-cancel" id="confirm-cancel">CANCEL</button>
+        <button class="mbtn mbtn-delete" id="confirm-ok">DELETE</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+  (() => {
+    /* Particle background */
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let W, H, pts = [];
+    const resize = () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; };
+    class Pt {
+      constructor(init) {
+        this.x = Math.random()*W; this.y = init ? Math.random()*H : H+5;
+        this.vx=(Math.random()-.5)*.12; this.vy=-(Math.random()*.28+.06);
+        this.r=Math.random()*1.1+.15; this.a=Math.random()*.45+.08;
+        this.h=[190,210,260][Math.floor(Math.random()*3)];
+      }
+      step(){ this.x+=this.vx; this.y+=this.vy; if(this.y<-4) Object.assign(this,new Pt(false)); }
+      draw(){ ctx.beginPath(); ctx.arc(this.x,this.y,this.r,0,Math.PI*2); ctx.fillStyle=`hsla(${this.h},85%,68%,${this.a})`; ctx.fill(); }
+    }
+    resize(); pts=Array.from({length:120},(_,i)=>new Pt(true));
+    (function loop(){
+      ctx.clearRect(0,0,W,H);
+      for(let i=0;i<pts.length;i++){
+        pts[i].step(); pts[i].draw();
+        for(let j=i+1;j<pts.length;j++){
+          const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y, d=Math.hypot(dx,dy);
+          if(d<90){ ctx.beginPath(); ctx.moveTo(pts[i].x,pts[i].y); ctx.lineTo(pts[j].x,pts[j].y);
+            ctx.strokeStyle=`rgba(0,200,255,${.035*(1-d/90)})`; ctx.lineWidth=.4; ctx.stroke(); }
+        }
+      }
+      requestAnimationFrame(loop);
+    })();
+    window.addEventListener('resize', resize, {passive:true});
+
+    /* Topbar scroll */
+    window.addEventListener('scroll',()=>document.getElementById('topbar').classList.toggle('scrolled',scrollY>8),{passive:true});
+
+    /* PWA SW */
+    if('serviceWorker' in navigator) window.addEventListener('load',async()=>{
+      try {
+        const reg=await navigator.serviceWorker.register('./sw.js',{scope:'./'});
+        reg.addEventListener('updatefound',()=>{
+          const nw=reg.installing;
+          nw.addEventListener('statechange',()=>{
+            if(nw.state==='installed'&&navigator.serviceWorker.controller){
+              const b=document.createElement('div'); b.className='pwa-bar';
+              b.innerHTML=`<span>⬡ UPDATE AVAILABLE</span><button id="pu">RELOAD</button><button id="pd">✕</button>`;
+              document.body.appendChild(b);
+              document.getElementById('pu').onclick=()=>{reg.waiting?.postMessage({type:'SKIP_WAITING'});location.reload();};
+              document.getElementById('pd').onclick=()=>b.remove();
+            }
+          });
+        });
+      } catch(e){}
+    });
+  })();
+  </script>
+</body>
+</html>
