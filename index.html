@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEXUS LAUNCHER</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#070a14" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="NEXUS" />
+  <link rel="apple-touch-icon" href="icons/icon-180.png" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&family=Exo+2:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════
+       ANIMATED BACKGROUND
+  ═══════════════════════════ -->
+  <div class="bg-scene" aria-hidden="true">
+    <canvas id="bg-canvas"></canvas>
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+    <div class="bg-grid"></div>
+    <div class="bg-vignette"></div>
+  </div>
+
+  <!-- ═══════════════════════════
+       TOPBAR
+  ═══════════════════════════ -->
+  <header class="topbar" id="topbar">
+    <div class="topbar-inner">
+
+      <!-- Logo -->
+      <div class="logo">
+        <div class="logo-hex-wrap">
+          <svg class="logo-hex" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="hg" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#00d2ff"/>
+                <stop offset="100%" stop-color="#7b2ff7"/>
+              </linearGradient>
+            </defs>
+            <polygon points="24,2 44,13 44,35 24,46 4,35 4,13"
+              stroke="url(#hg)" stroke-width="1.5" fill="rgba(0,210,255,0.06)"/>
+            <polygon points="24,9 38,17 38,31 24,39 10,31 10,17"
+              stroke="rgba(0,210,255,0.25)" stroke-width="1" fill="none"/>
+            <circle cx="24" cy="24" r="5.5" fill="url(#hg)"/>
+          </svg>
+          <div class="logo-pulse"></div>
+        </div>
+        <div class="logo-words">
+          <span class="logo-main">NEXUS</span>
+          <span class="logo-sub">LAUNCHER &nbsp;<em>v2.0</em></span>
+        </div>
+      </div>
+
+      <!-- Centre nav -->
+      <nav class="topbar-nav">
+        <button class="nav-pill active" data-view="library">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <rect x="1" y="1" width="6" height="6" rx="1"/>
+            <rect x="9" y="1" width="6" height="6" rx="1"/>
+            <rect x="1" y="9" width="6" height="6" rx="1"/>
+            <rect x="9" y="9" width="6" height="6" rx="1"/>
+          </svg>
+          LIBRARY
+        </button>
+        <button class="nav-pill" data-view="recent">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <circle cx="8" cy="8" r="6"/>
+            <polyline points="8,4 8,8 11,10"/>
+          </svg>
+          RECENT
+        </button>
+      </nav>
+
+      <!-- Right cluster -->
+      <div class="topbar-right">
+        <div class="stat-chip">
+          <span class="stat-dot"></span>
+          <span id="app-count">0 APPS</span>
+        </div>
+        <!-- file input: hidden via attribute — [hidden] rule in CSS keeps it invisible -->
+        <input type="file" id="file-input" accept=".html,.htm,.zip" multiple hidden />
+        <button class="btn-add" id="upload-btn" aria-label="Add app">
+          <span class="btn-add-glow" aria-hidden="true"></span>
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor"
+               stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+            <line x1="9" y1="3" x2="9" y2="15"/>
+            <line x1="3" y1="9" x2="15" y2="9"/>
+          </svg>
+          <span>ADD APP</span>
+        </button>
+      </div>
+
+    </div>
+    <div class="topbar-border-glow" aria-hidden="true"></div>
+  </header>
+
+  <!-- ═══════════════════════════
+       SEARCH / FILTER BAND
+  ═══════════════════════════ -->
+  <section class="search-band">
+    <div class="search-band-inner">
+
+      <div class="search-wrap">
+        <svg class="search-ico" viewBox="0 0 20 20" fill="none"
+             stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="8.5" cy="8.5" r="5.5"/>
+          <line x1="13" y1="13" x2="18" y2="18"/>
+        </svg>
+        <input type="text" id="search-input"
+               placeholder="Search your library..."
+               autocomplete="off" spellcheck="false"
+               aria-label="Search library" />
+        <!-- search-clear: hidden by default, shown by JS when input has text -->
+        <button class="search-clear" id="search-clear" hidden aria-label="Clear search">
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor"
+               stroke-width="2" aria-hidden="true">
+            <line x1="2" y1="2" x2="12" y2="12"/>
+            <line x1="12" y1="2" x2="2" y2="12"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="filter-row" role="group" aria-label="Filter by type">
+        <button class="filter-pill active" data-filter="all">ALL</button>
+        <button class="filter-pill" data-filter="html">
+          <span class="filter-dot html" aria-hidden="true"></span>HTML
+        </button>
+        <button class="filter-pill" data-filter="zip">
+          <span class="filter-dot zip" aria-hidden="true"></span>ZIP
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════
+       DRAG & DROP OVERLAY
+       NOTE: starts with hidden attribute — CSS [hidden] rule keeps it display:none
+  ═══════════════════════════ -->
+  <div id="drop-overlay" class="drop-overlay" hidden aria-hidden="true">
+    <div class="drop-rings" aria-hidden="true">
+      <div class="drop-ring r1"></div>
+      <div class="drop-ring r2"></div>
+      <div class="drop-ring r3"></div>
+    </div>
+    <div class="drop-body">
+      <svg class="drop-arrow" viewBox="0 0 56 56" fill="none"
+           stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <line x1="28" y1="8" x2="28" y2="42"/>
+        <polyline points="16,30 28,42 40,30"/>
+        <line x1="14" y1="50" x2="42" y2="50"/>
+      </svg>
+      <p class="drop-title">RELEASE TO UPLOAD</p>
+      <p class="drop-hint">Supports <strong>.html</strong> and <strong>.zip</strong></p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════
+       MAIN CONTENT
+  ═══════════════════════════ -->
+  <main class="main" id="main-content">
+
+    <!-- EMPTY STATE — shown when no apps in library -->
+    <div class="empty-state" id="empty-state">
+      <div class="empty-visual" aria-hidden="true">
+        <div class="empty-blob"></div>
+        <div class="empty-ring er1"></div>
+        <div class="empty-ring er2"></div>
+        <div class="empty-ring er3"></div>
+        <svg class="empty-hex-svg" viewBox="0 0 100 100" fill="none">
+          <polygon points="50,5 88,27 88,73 50,95 12,73 12,27"
+            stroke="rgba(0,210,255,0.35)" stroke-width="1.5" fill="rgba(0,210,255,0.03)"/>
+          <polygon points="50,17 77,32 77,68 50,83 23,68 23,32"
+            stroke="rgba(0,210,255,0.2)" stroke-width="1" fill="none"/>
+          <polygon points="50,32 64,40 64,60 50,68 36,60 36,40"
+            fill="rgba(0,210,255,0.12)" stroke="rgba(0,210,255,0.5)" stroke-width="1"/>
+          <circle cx="50" cy="50" r="8"
+            fill="rgba(0,210,255,0.25)" stroke="rgba(0,210,255,0.8)" stroke-width="1"/>
+        </svg>
+      </div>
+      <h2 class="empty-title">LIBRARY IS EMPTY</h2>
+      <p class="empty-desc">
+        Upload HTML files or ZIP projects to build your personal app collection.
+        Everything is stored securely in your browser.
+      </p>
+      <button class="btn-add btn-add-hero" id="upload-btn-empty">
+        <span class="btn-add-glow" aria-hidden="true"></span>
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor"
+             stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+          <line x1="9" y1="3" x2="9" y2="15"/>
+          <line x1="3" y1="9" x2="15" y2="9"/>
+        </svg>
+        <span>ADD FIRST APP</span>
+      </button>
+      <p class="empty-drag-hint">— or drag &amp; drop a file anywhere on this page —</p>
+    </div>
+
+    <!-- GRID HEADER — hidden until apps are added -->
+    <div class="grid-header" id="grid-header" hidden>
+      <div class="gh-left">
+        <span class="gh-title">INSTALLED</span>
+        <span class="gh-badge" id="grid-count-badge">0</span>
+      </div>
+      <div class="gh-right">
+        <button class="view-btn active" id="view-grid" title="Grid view" aria-label="Grid view">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <rect x="1" y="1" width="6" height="6" rx="1"/>
+            <rect x="9" y="1" width="6" height="6" rx="1"/>
+            <rect x="1" y="9" width="6" height="6" rx="1"/>
+            <rect x="9" y="9" width="6" height="6" rx="1"/>
+          </svg>
+        </button>
+        <button class="view-btn" id="view-list" title="List view" aria-label="List view">
+          <svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+            <rect x="1" y="2" width="14" height="3" rx="1"/>
+            <rect x="1" y="7" width="14" height="3" rx="1"/>
+            <rect x="1" y="12" width="14" height="3" rx="1"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- APP GRID — hidden until apps are added -->
+    <div class="app-grid" id="app-grid" hidden role="list" aria-label="Installed apps"></div>
+
+    <!-- NO RESULTS — hidden until a search yields nothing -->
+    <div class="no-results" id="no-results" hidden>
+      <span aria-hidden="true">⊘</span>
+      <p>No apps match your search</p>
+    </div>
+
+  </main>
+
+  <!-- ═══════════════════════════
+       STATUS BAR
+  ═══════════════════════════ -->
+  <footer class="statusbar" role="status" aria-live="polite">
+    <div class="sb-left">
+      <span class="sb-led" id="status-led" aria-hidden="true"></span>
+      <span id="status-msg">READY</span>
+    </div>
+    <div class="sb-right">
+      <span class="sb-badge">INDEXEDDB</span>
+      <span class="sb-badge">PWA</span>
+      <span id="storage-info">STORAGE ACTIVE</span>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════
+       LAUNCH OVERLAY
+       NOTE: starts hidden — JS removes hidden to show
+  ═══════════════════════════ -->
+  <div id="launch-overlay" class="launch-overlay" hidden>
+    <div class="exit-bar" id="exit-bar">
+      <div class="exit-left">
+        <div class="exit-dot" aria-hidden="true"></div>
+        <span class="exit-name" id="exit-app-name"></span>
+      </div>
+      <button class="exit-btn" id="exit-btn" aria-label="Exit app">
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+          <line x1="4" y1="4" x2="14" y2="14"/>
+          <line x1="14" y1="4" x2="4" y2="14"/>
+        </svg>
+        EXIT
+      </button>
+    </div>
+    <iframe
+      id="app-frame"
+      class="app-frame"
+      sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups allow-pointer-lock allow-downloads"
+      allowfullscreen
+      title="Running App"
+      src="about:blank">
+    </iframe>
+  </div>
+
+  <!-- ═══════════════════════════
+       TOAST NOTIFICATION
+       NOTE: visibility controlled via opacity + pointer-events, NOT hidden attr
+       — so [hidden] rule doesn't interfere with its show/hide transitions
+  ═══════════════════════════ -->
+  <div id="toast" class="toast" aria-live="assertive" role="alert">
+    <span id="toast-icon" class="toast-icon" aria-hidden="true"></span>
+    <span id="toast-msg"></span>
+  </div>
+
+  <!-- ═══════════════════════════
+       DELETE CONFIRM MODAL
+       NOTE: starts hidden — JS removes hidden to show
+  ═══════════════════════════ -->
+  <div id="confirm-modal" class="modal-back" hidden role="dialog"
+       aria-modal="true" aria-labelledby="modal-title-text">
+    <div class="modal-box">
+      <div class="modal-warn-icon" aria-hidden="true">
+        <svg viewBox="0 0 48 48" fill="none">
+          <circle cx="24" cy="24" r="20"
+            stroke="rgba(255,60,100,0.4)" stroke-width="1.5"/>
+          <line x1="24" y1="14" x2="24" y2="26"
+            stroke="#ff3c64" stroke-width="2.5" stroke-linecap="round"/>
+          <circle cx="24" cy="33" r="2" fill="#ff3c64"/>
+        </svg>
+      </div>
+      <h3 class="modal-title" id="modal-title-text">DELETE APP?</h3>
+      <p class="modal-desc" id="confirm-msg">
+        This will permanently remove the app from your library.
+      </p>
+      <div class="modal-btns">
+        <button class="mbtn mbtn-cancel" id="confirm-cancel">CANCEL</button>
+        <button class="mbtn mbtn-delete" id="confirm-ok">DELETE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════
+       SCRIPTS
+  ═══════════════════════════ -->
+  <script src="app.js"></script>
+
+  <script>
+  /* ── Inline bootstrap scripts (non-critical, run after app.js) ── */
+  (() => {
+    'use strict';
+
+    /* ── Particle / network background ────────────────────────── */
+    const canvas = document.getElementById('bg-canvas');
+    const ctx    = canvas.getContext('2d');
+    let W, H, pts = [];
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+
+    class Pt {
+      constructor(scatterY) {
+        this.reset(scatterY);
+      }
+      reset(scatterY) {
+        this.x  = Math.random() * W;
+        this.y  = scatterY ? Math.random() * H : H + 6;
+        this.vx = (Math.random() - 0.5) * 0.12;
+        this.vy = -(Math.random() * 0.28 + 0.06);
+        this.r  = Math.random() * 1.1 + 0.15;
+        this.a  = Math.random() * 0.45 + 0.08;
+        this.h  = [190, 210, 260][Math.floor(Math.random() * 3)];
+      }
+      step() {
+        this.x += this.vx;
+        this.y += this.vy;
+        /* Wrap horizontally */
+        if (this.x < -2) this.x = W + 2;
+        if (this.x > W + 2) this.x = -2;
+        /* Reset when off the top */
+        if (this.y < -4) this.reset(false);
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${this.h},85%,68%,${this.a})`;
+        ctx.fill();
+      }
+    }
+
+    function initParticles() {
+      resize();
+      pts = Array.from({ length: 120 }, () => new Pt(true));
+    }
+
+    (function loop() {
+      ctx.clearRect(0, 0, W, H);
+      for (let i = 0; i < pts.length; i++) {
+        pts[i].step();
+        pts[i].draw();
+        for (let j = i + 1; j < pts.length; j++) {
+          const dx = pts[i].x - pts[j].x;
+          const dy = pts[i].y - pts[j].y;
+          const d  = Math.hypot(dx, dy);
+          if (d < 90) {
+            ctx.beginPath();
+            ctx.moveTo(pts[i].x, pts[i].y);
+            ctx.lineTo(pts[j].x, pts[j].y);
+            ctx.strokeStyle = `rgba(0,200,255,${0.035 * (1 - d / 90)})`;
+            ctx.lineWidth   = 0.4;
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(loop);
+    })();
+
+    /* Re-init on resize so particles stay within new bounds */
+    window.addEventListener('resize', () => {
+      resize();
+      /* Clamp existing particles back into new viewport */
+      pts.forEach(p => {
+        if (p.x > W) p.x = Math.random() * W;
+        if (p.y > H) p.y = Math.random() * H;
+      });
+    }, { passive: true });
+
+    initParticles();
+
+    /* ── Topbar scroll shadow ────────────────────────────────── */
+    window.addEventListener('scroll', () => {
+      document.getElementById('topbar')
+        .classList.toggle('scrolled', window.scrollY > 8);
+    }, { passive: true });
+
+    /* ── PWA Service Worker ──────────────────────────────────── */
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async () => {
+        try {
+          const reg = await navigator.serviceWorker.register(
+            './sw.js', { scope: './' }
+          );
+
+          /* Listen for a new SW waiting to activate */
+          reg.addEventListener('updatefound', () => {
+            const nw = reg.installing;
+            nw.addEventListener('statechange', () => {
+              if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                showPWAUpdateBar(reg);
+              }
+            });
+          });
+        } catch (e) {
+          console.warn('[PWA] SW registration failed:', e);
+        }
+      });
+    }
+
+    function showPWAUpdateBar(reg) {
+      /* Remove any existing bar first */
+      document.querySelector('.pwa-bar')?.remove();
+      const b = document.createElement('div');
+      b.className = 'pwa-bar';
+      b.innerHTML =
+        `<span>⬡ UPDATE AVAILABLE</span>` +
+        `<button class="pwa-bar-reload">RELOAD</button>` +
+        `<button class="pwa-bar-dismiss">✕</button>`;
+      document.body.appendChild(b);
+      b.querySelector('.pwa-bar-reload').addEventListener('click', () => {
+        reg.waiting?.postMessage({ type: 'SKIP_WAITING' });
+        window.location.reload();
+      });
+      b.querySelector('.pwa-bar-dismiss').addEventListener('click', () => b.remove());
+    }
+
+  })();
+  </script>
+
+</body>
+</html>
